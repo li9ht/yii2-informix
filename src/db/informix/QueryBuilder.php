@@ -31,11 +31,6 @@ class QueryBuilder extends \yii\db\QueryBuilder
     public function buildOrderByAndLimit($sql, $orderBy, $limit, $offset)
     {
 
-        $orderBy = $this->buildOrderBy($orderBy);
-        if ($orderBy !== '') {
-            $sql .= $this->separator . $orderBy;
-        }
-
         if ($this->hasLimit($limit)) {
             $find = '/^([\s(])*SELECT(\s+SKIP\s+\d+)?(\s+LIMIT\s+\d+)?(\s+DISTINCT)?/i';
             $replace = "\\1SELECT\\2 LIMIT $limit\\4";
@@ -50,40 +45,30 @@ class QueryBuilder extends \yii\db\QueryBuilder
         return $sql;
     }
 
-    /**
-     * @param integer $limit
-     * @param integer $offset
-     * @throws \yii\base\NotSupportedException
-     * @return string the LIMIT and OFFSET clauses
-     */
-    public function buildLimit($limit, $offset)
-    {
-        throw new NotSupportedException('The buildLimit function is not implemented, please use buildOrderByAndLimit');
-    }
     
-    /**
-     * @inheritdoc
-     */
-    protected function buildCompositeInCondition($operator, $columns, $values, &$params)
-    {
-        $quotedColumns = [];
-        foreach ($columns as $i => $column) {
-            $quotedColumns[$i] = strpos($column, '(') === false ? $this->db->quoteColumnName($column) : $column;
-        }
-        $vss = [];
-        foreach ($values as $value) {
-            $vs = [];
-            foreach ($columns as $i => $column) {
-                if (isset($value[$column])) {
-                    $phName = self::PARAM_PREFIX . count($params);
-                    $params[$phName] = $value[$column];
-                    $vs[] = $quotedColumns[$i] . ($operator === 'IN' ? ' = ' : ' != ') . $phName;
-                } else {
-                    $vs[] = $quotedColumns[$i] . ($operator === 'IN' ? ' IS' : ' IS NOT') . ' NULL';
-                }
-            }
-            $vss[] = '(' . implode($operator === 'IN' ? ' AND ' : ' OR ', $vs) . ')';
-        }
-        return '(' . implode($operator === 'IN' ? ' OR ' : ' AND ', $vss) . ')';
-    }
+    // /**
+    //  * @inheritdoc
+    //  */
+    // protected function buildCompositeInCondition($operator, $columns, $values, &$params)
+    // {
+    //     $quotedColumns = [];
+    //     foreach ($columns as $i => $column) {
+    //         $quotedColumns[$i] = strpos($column, '(') === false ? $this->db->quoteColumnName($column) : $column;
+    //     }
+    //     $vss = [];
+    //     foreach ($values as $value) {
+    //         $vs = [];
+    //         foreach ($columns as $i => $column) {
+    //             if (isset($value[$column])) {
+    //                 $phName = self::PARAM_PREFIX . count($params);
+    //                 $params[$phName] = $value[$column];
+    //                 $vs[] = $quotedColumns[$i] . ($operator === 'IN' ? ' = ' : ' != ') . $phName;
+    //             } else {
+    //                 $vs[] = $quotedColumns[$i] . ($operator === 'IN' ? ' IS' : ' IS NOT') . ' NULL';
+    //             }
+    //         }
+    //         $vss[] = '(' . implode($operator === 'IN' ? ' AND ' : ' OR ', $vs) . ')';
+    //     }
+    //     return '(' . implode($operator === 'IN' ? ' OR ' : ' AND ', $vss) . ')';
+    // }
 }
