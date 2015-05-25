@@ -1,0 +1,22 @@
+{
+    "name": "li9ht/yii2-informixOdbc",
+    "description": "A Yii2 driver for informix",
+    "keywords": [
+        "yii2",
+        "informix"
+    ],
+    "homepage": "https://bitbucket.org/li9ht/yii2-informixodbc",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "support": {
+        "issues": "https://bitbucket.org/li9ht/yii2-informixodbc",
+        "source": "https://bitbucket.org/li9ht/yii2-informixodbc"
+    },
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {"li9ht\\yii2\\informix\\driver\\": "src/"}
+    }
+}
