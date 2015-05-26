@@ -16,6 +16,11 @@
         "php": ">=5.4.0",
         "yiisoft/yii2": "*"
     },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
     "autoload": {
         "psr-4": {"li9ht\\yii2\\informix\\driver\\": "src/"}
     }
