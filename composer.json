@@ -22,6 +22,6 @@
         }
     },
     "autoload": {
-        "psr-4": {"li9ht\\yii2\\informix\\driver\\": "src/"}
+        "psr-4": {"li9ht\\yii2\\informix\\": "src/"}
     }
 }
