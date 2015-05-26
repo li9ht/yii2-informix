@@ -11,50 +11,7 @@ class Schema extends yii\db\Schema
     /**
      * @var array mapping from physical column types (keys) to abstract column types (values)
      */
-    public $typeMap = [
-         // exact numbers
-        'bigint' => self::TYPE_BIGINT,
-        'numeric' => self::TYPE_DECIMAL,
-        'bit' => self::TYPE_SMALLINT,
-        'smallint' => self::TYPE_SMALLINT,
-        'decimal' => self::TYPE_DECIMAL,
-        'smallmoney' => self::TYPE_MONEY,
-        'int' => self::TYPE_INTEGER,
-        'tinyint' => self::TYPE_SMALLINT,
-        'money' => self::TYPE_MONEY,
-        // approximate numbers
-        'float' => self::TYPE_FLOAT,
-        'double' => self::TYPE_DOUBLE,
-        'real' => self::TYPE_FLOAT,
-        // date and time
-        'date' => self::TYPE_DATE,
-        'datetimeoffset' => self::TYPE_DATETIME,
-        'datetime2' => self::TYPE_DATETIME,
-        'smalldatetime' => self::TYPE_DATETIME,
-        'datetime' => self::TYPE_DATETIME,
-        'time' => self::TYPE_TIME,
-        // character strings
-        'char' => self::TYPE_STRING,
-        'varchar' => self::TYPE_STRING,
-        'text' => self::TYPE_TEXT,
-        // unicode character strings
-        'nchar' => self::TYPE_STRING,
-        'nvarchar' => self::TYPE_STRING,
-        'ntext' => self::TYPE_TEXT,
-        // binary strings
-        'binary' => self::TYPE_BINARY,
-        'varbinary' => self::TYPE_BINARY,
-        'image' => self::TYPE_BINARY,
-        // other data types
-        // 'cursor' type cannot be used with tables
-        'timestamp' => self::TYPE_TIMESTAMP,
-        'hierarchyid' => self::TYPE_STRING,
-        'uniqueidentifier' => self::TYPE_STRING,
-        'sql_variant' => self::TYPE_STRING,
-        'xml' => self::TYPE_STRING,
-        'table' => self::TYPE_STRING,
-    ];
-
+ 
     private $tabids = array();
 
     /**
@@ -63,7 +20,14 @@ class Schema extends yii\db\Schema
     public function init()
     {
         parent::init();
-        $this->db->enableSavepoint = false;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function quoteColumnName($name)
+    {
+        return $name;
     }
 
     /**
@@ -92,7 +56,8 @@ class Schema extends yii\db\Schema
         
         if (!$this->findColumns($table))
             return null;
-        // $this->findConstraints($table);
+        
+        $this->findConstraints($table);
         return $table;
     }
 
@@ -114,73 +79,21 @@ class Schema extends yii\db\Schema
         }
     }
 
-    /**
-     * Loads the column information into a [[ColumnSchema]] object.
-     * @param array $info column information
-     * @return ColumnSchema the column schema object
-     */
-    // protected function loadColumnSchema($info)
-    // {
-    //     $column = $this->createColumnSchema();
-
-    //     $column->name = $info['COL'];
-    //     $column->allowNull = $info['NULLFLAG'] == 'Y';
-    //     $column->dbType = $info['COLTYPE'];
-    //     $column->enumValues = [];
-    //     $column->isPrimaryKey = null;
-    //     $column->autoIncrement = false;
-    //     $column->unsigned = false;
-    //     $column->comment = $info['LABEL'] === null ? '' : $info['LABEL'];
-    //     $column->size = $info['WIDTH'];
-
-    //     $column->type = self::TYPE_STRING;
-    //     if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column->dbType, $matches)) {
-    //         $type = $matches[1];
-    //         if (isset($this->typeMap[$type])) {
-    //             $column->type = $this->typeMap[$type];
-    //         }
-    //         if (!empty($matches[2])) {
-    //             $values = explode(',', $matches[2]);
-    //             $column->size = $column->precision = (int) $values[0];
-    //             if (isset($values[1])) {
-    //                 $column->scale = (int) $values[1];
-    //             }
-    //             if ($column->size === 1 && ($type === 'tinyint' || $type === 'bit')) {
-    //                 $column->type = 'boolean';
-    //             } elseif ($type === 'bit') {
-    //                 if ($column->size > 32) {
-    //                     $column->type = 'bigint';
-    //                 } elseif ($column->size === 32) {
-    //                     $column->type = 'integer';
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     $column->phpType = $this->getColumnPhpType($column);
-
-    //     if (!$column->isPrimaryKey && ($column->type !== 'timestamp' || $info['DFLT_VALUE'] !== 'CURRENT_TIMESTAMP')) {
-    //         $column->defaultValue = $column->phpTypecast($info['DFLT_VALUE']);
-    //     }
-
-    //     return $column;
-    // }
-
     protected function createColumn($column) {
         $c = $this->createColumnSchema();
-        $c->name = $column['COLNAME'];
-        $c->allowNull = (boolean) $column['ALLOWNULL'];
+        $c->name = $column['colname'];
+        $c->allowNull = (boolean) $column['allownull'];
         $c->isPrimaryKey = false;
-        $c->size  = $column['COLLENGTH'];
-        $c->autoIncrement = stripos($column['TYPE'], 'serial') !== false;
+        $c->size  = $column['collength'];
+        $c->autoIncrement = stripos($column['type'], 'serial') !== false;
 
-        if (preg_match('/(char|numeric|decimal|money)/i', $column['TYPE'])) {
-            $column['TYPE'] .= '(' . $column['COLLENGTH'] . ')';
-        } elseif (preg_match('/(datetime|interval)/i', $column['TYPE'])) {
-            $column['TYPE'] .= ' ' . $column['COLLENGTH'];
+        if (preg_match('/(char|numeric|decimal|money)/i', $column['type'])) {
+            $column['type'] .= '(' . $column['collength'] . ')';
+        } elseif (preg_match('/(datetime|interval)/i', $column['type'])) {
+            $column['type'] .= ' ' . $column['collength'];
         }
 
-        $c->init($column['TYPE'], $column['DEFVALUE']);
+        $c->init($column['type'], $column['defvalue']);
         return $c;
     }
 
@@ -249,15 +162,15 @@ EOD;
         );
 
         foreach ($columns as $column) {
-            $coltypebase = (int) $column['COLTYPE'];
+            $coltypebase = (int) $column['coltype'];
             $coltypereal = $coltypebase % 256;
             if (array_key_exists($coltypereal, $columnsTypes)) {
-                $column['TYPE'] = $columnsTypes[$coltypereal];
-                $extended_id = (int) $column['EXTENDED_ID'];
+                $column['type'] = $columnsTypes[$coltypereal];
+                $extended_id = (int) $column['extended_id'];
                 switch ($coltypereal) {
                     case 5:
                     case 8:
-                        $column['COLLENGTH'] = floor($column['COLLENGTH'] / 256) . ',' . $column['COLLENGTH'] % 256;
+                        $column['collength'] = floor($column['collength'] / 256) . ',' . $column['collength'] % 256;
                         break;
                     case 14:
                     case 10:
@@ -275,13 +188,13 @@ EOD;
                             14 => 'FRACTION',
                             15 => 'FRACTION',
                         );
-                        $largestQualifier = floor(($column['COLLENGTH'] % 256) / 16);
-                        $smallestQualifier = $column['COLLENGTH'] % 16;
+                        $largestQualifier = floor(($column['collength'] % 256) / 16);
+                        $smallestQualifier = $column['collength'] % 16;
                         //Largest Qualifier
                         $datetimeLength .= (isset($datetimeTypes[$largestQualifier])) ? $datetimeTypes[$largestQualifier] : 'UNKNOWN';
                         if ($coltypereal == 14) {
                             //INTERVAL
-                            $datetimeLength .= '(' . (floor($column['COLLENGTH'] / 256) + floor(($column['COLLENGTH'] % 256) / 16) - ($column['COLLENGTH'] % 16) ) . ')';
+                            $datetimeLength .= '(' . (floor($column['collength'] / 256) + floor(($column['collength'] % 256) / 16) - ($column['collength'] % 16) ) . ')';
                         } else {
                             //DATETIME
                             if (in_array($largestQualifier, array(11, 12, 13, 14, 15))) {
@@ -294,62 +207,62 @@ EOD;
                         if (in_array($largestQualifier, array(11, 12, 13, 14, 15))) {
                             $datetimeLength .= '(' . ($largestQualifier - 10) . ')';
                         }
-                        $column['COLLENGTH'] = $datetimeLength;
+                        $column['collength'] = $datetimeLength;
                         break;
                     case 40:
                         if ($extended_id == 1) {
-                            $column['TYPE'] = 'LVARCHAR';
+                            $column['type'] = 'LVARCHAR';
                         } else {
-                            $column['TYPE'] = 'UDTVAR';
+                            $column['type'] = 'UDTVAR';
                         }
                         break;
                     case 41:
                         switch ($extended_id) {
                             case 5:
-                                $column['TYPE'] = 'BOOLEAN';
+                                $column['type'] = 'BOOLEAN';
                                 break;
                             case 10:
-                                $column['TYPE'] = 'BLOB';
+                                $column['type'] = 'BLOB';
                                 break;
                             case 11:
-                                $column['TYPE'] = 'CLOB';
+                                $column['type'] = 'CLOB';
                                 break;
                             default :
-                                $column['TYPE'] = 'UDTFIXED';
+                                $column['type'] = 'UDTFIXED';
                                 break;
                         }
                         break;
                 }
             } else {
-                $column['TYPE'] = 'UNKNOWN';
+                $column['type'] = 'UNKNOWN';
             }
             //http://publib.boulder.ibm.com/infocenter/idshelp/v10/index.jsp?topic=/com.ibm.sqlr.doc/sqlrmst48.htm
-            switch ($column['DEFTYPE']) {
+            switch ($column['deftype']) {
                 case 'C':
-                    $column['DEFVALUE'] = 'CURRENT';
+                    $column['defvalue'] = 'CURRENT';
                     break;
                 case 'N':
-                    $column['DEFVALUE'] = 'NULL';
+                    $column['defvalue'] = 'NULL';
                     break;
                 case 'S':
-                    $column['DEFVALUE'] = 'DBSERVERNAME';
+                    $column['defvalue'] = 'DBSERVERNAME';
                     break;
                 case 'T':
-                    $column['DEFVALUE'] = 'TODAY';
+                    $column['defvalue'] = 'TODAY';
                     break;
                 case 'U':
-                    $column['DEFVALUE'] = 'USER';
+                    $column['defvalue'] = 'USER';
                     break;
                 case 'L':
                     //CHAR, NCHAR, VARCHAR, NVARCHAR, LVARCHAR, VARIABLELENGTH, FIXEDLENGTH
                     if (in_array($coltypereal, array(0, 15, 16, 13, 40, 41))) {
-                        $explod = explode(chr(0), $column['DEFVALUE']);
-                        $column['DEFVALUE'] = isset($explod[0]) ? $explod[0] : '';
+                        $explod = explode(chr(0), $column['defvalue']);
+                        $column['defvalue'] = isset($explod[0]) ? $explod[0] : '';
                     } else {
-                        $explod = explode(' ', $column['DEFVALUE']);
-                        $column['DEFVALUE'] = isset($explod[1]) ? $explod[1] : '';
+                        $explod = explode(' ', $column['defvalue']);
+                        $column['defvalue'] = isset($explod[1]) ? $explod[1] : '';
                         if (in_array($coltypereal, array(3, 5, 8))) {
-                            $column['DEFVALUE'] = (string) (float) $column['DEFVALUE'];
+                            $column['defvalue'] = (string) (float) $column['defvalue'];
                         }
                     }
                     //Literal value
@@ -373,10 +286,10 @@ EOD;
         $command = $this->db->createCommand($sql);
         $command->bindValue(':table', $table->name);
         foreach ($command->queryAll() as $row) {
-            if ($row['CONSTRTYPE'] === 'P') { // primary key
-                // $this->findPrimaryKey($table, $row['IDXNAME']);
-            } elseif ($row['CONSTRTYPE'] === 'R') { // foreign key
-               // $this->findForeignKeys($table, $row['IDXNAME']);
+            if ($row['constrtype'] === 'P') { // primary key
+                $this->findPrimaryKey($table, $row['idxname']);
+            } elseif ($row['constrtype'] === 'R') { // foreign key
+               //$this->findForeignKeys($table, $row['idxname']);
             }
         }
     }
@@ -410,9 +323,9 @@ EOD;
         $command = $this->db->createCommand($sql);
         $command->bindValue(":indice", $indice);
         foreach ($command->queryAll() as $row) {
-            $columns = $this->getColumnsNumber($row['TABID']);
+            $columns = $this->getColumnsNumber($row['tabid']);
             for ($x = 1; $x < 16; $x++) {
-                $colno = (isset($row["PART{$x}"])) ? abs($row["PART{$x}"]) : 0;
+                $colno = (isset($row["part{$x}"])) ? abs($row["part{$x}"]) : 0;
                 if ($colno == 0) {
                     continue;
                 }
@@ -428,10 +341,10 @@ EOD;
                 }
             }
         }
-        /* @var $c CInformixColumnSchema */
+
         foreach ($table->columns as $c) {
             if ($c->autoIncrement && $c->isPrimaryKey) {
-                $table->sequenceName = $c->rawName;
+                $table->sequenceName = $c->name;
                 break;
             }
         }
@@ -492,15 +405,15 @@ EOD;
         $command = $this->db->createCommand($sql);
         $command->bindValue(":indice", $indice);
         foreach ($command->queryAll() as $row) {
-            $columnsbase = $this->getColumnsNumber($row['BASETABID']);
-            $columnsrefer = $this->getColumnsNumber($row['REFTABID']);
+            $columnsbase = $this->getColumnsNumber($row['basetabid']);
+            $columnsrefer = $this->getColumnsNumber($row['reftabid']);
             for ($x = 1; $x < 16; $x++) {
-                $colnobase = (isset($row["BASEPART{$x}"])) ? abs($row["BASEPART{$x}"]) : 0;
+                $colnobase = (isset($row["basepart{$x}"])) ? abs($row["basepart{$x}"]) : 0;
                 if ($colnobase == 0) {
                     continue;
                 }
                 $colnamebase = $columnsbase[$colnobase];
-                $colnoref = (isset($row["REFPART{$x}"])) ? abs($row["REFPART{$x}"]) : 0;
+                $colnoref = (isset($row["refpart{$x}"])) ? abs($row["refpart{$x}"]) : 0;
                 if ($colnoref == 0) {
                     continue;
                 }
@@ -508,7 +421,7 @@ EOD;
                 if (isset($table->columns[$colnamebase])) {
                     $table->columns[$colnamebase]->isForeignKey = true;
                 }
-                $table->foreignKeys[$colnamebase] = array($row['REFTABNAME'], $colnameref);
+                $table->foreignKeys[$colnamebase] = array($row['reftabname'], $colnameref);
             }
         }
     }
@@ -544,7 +457,7 @@ EOD;
         $rows = $command->queryAll();
         $names = array();
         foreach ($rows as $row) {
-            $names[] = $row['TABNAME'];
+            $names[] = $row['tabname'];
         }
         return $names;
     }
@@ -558,7 +471,7 @@ EOD;
         $command->bindValue(':tabid', $tabid);
         $columns = array();
         foreach ($command->queryAll() as $row) {
-            $columns[$row['COLNO']] = $row['COLNAME'];
+            $columns[$row['colno']] = $row['colname'];
         }
         $this->tabids[$tabid] = $columns;
         return $columns;
