@@ -2,15 +2,28 @@
 namespace li9ht\yii2\informix\driver\db\informix;
 
 use yii;
-use yii\db\TableSchema;
 use yii\base\NotSupportedException;
-use yii\db\ColumnSchema;
 
 class Schema extends yii\db\Schema
 {
     /**
      * @var array mapping from physical column types (keys) to abstract column types (values)
      */
+    public $typeMap = [
+        'serial NOT NULL PRIMARY KEY' => self::TYPE_PK ,
+        'varchar(255)' => self::TYPE_STRING  ,
+        'text' => self::TYPE_TEXT ,
+        'integer'  => self::TYPE_INTEGER  ,
+        'float'  => self::TYPE_FLOAT  ,
+        'decimal'  => self::TYPE_DECIMAL ,
+        'datetime year to second'  => self::TYPE_DATETIME ,
+        'datetime year to second'  => self::TYPE_TIMESTAMP ,
+        'datetime hour to second'  => self::TYPE_TIME  ,
+        'datetime year to day'  => self::TYPE_DATE   ,
+        'byte'  => self::TYPE_BINARY ,
+        'boolean'  => self::TYPE_BOOLEAN  ,
+        'money'  => self::TYPE_MONEY   ,
+    ];
  
     private $tabids = array();
 
@@ -51,7 +64,7 @@ class Schema extends yii\db\Schema
      */
     public function loadTableSchema($name)
     {
-        $table = new yii\db\TableSchema();
+        $table = new TableSchema();
         $this->resolveTableNames($table, $name);
         
         if (!$this->findColumns($table))
@@ -80,7 +93,7 @@ class Schema extends yii\db\Schema
     }
 
     protected function createColumn($column) {
-        $c = $this->createColumnSchema();
+        $c = new ColumnSchema();
         $c->name = $column['colname'];
         $c->allowNull = (boolean) $column['allownull'];
         $c->isPrimaryKey = false;
@@ -97,6 +110,38 @@ class Schema extends yii\db\Schema
         return $c;
     }
 
+    private  $columnsTypes = array(
+        0 => 'CHAR',
+        1 => 'SMALLINT',
+        2 => 'INTEGER',
+        3 => 'FLOAT',
+        4 => 'SMALLFLOAT',
+        5 => 'DECIMAL',
+        6 => 'SERIAL',
+        7 => 'DATE',
+        8 => 'MONEY',
+        9 => 'NULL',
+        10 => 'DATETIME',
+        11 => 'BYTE',
+        12 => 'TEXT',
+        13 => 'VARCHAR',
+        14 => 'INTERVAL',
+        15 => 'NCHAR',
+        16 => 'NVARCHAR',
+        17 => 'INT8',
+        18 => 'SERIAL8',
+        19 => 'SET',
+        20 => 'MULTISET',
+        21 => 'LIST',
+        22 => 'ROW',
+        23 => 'COLLECTION',
+        24 => 'ROWREF',
+        40 => 'VARIABLELENGTH',
+        41 => 'FIXEDLENGTH',
+        42 => 'REFSER8',
+        52 => 'BIGINT',
+        53 => 'BIGINT',
+    );
 
     /**
      * Collects the metadata of table columns.
@@ -128,44 +173,12 @@ EOD;
 
         if (($columns = $command->queryAll()) === array())
             return false;
-        $columnsTypes = array(
-            0 => 'CHAR',
-            1 => 'SMALLINT',
-            2 => 'INTEGER',
-            3 => 'FLOAT',
-            4 => 'SMALLFLOAT',
-            5 => 'DECIMAL',
-            6 => 'SERIAL',
-            7 => 'DATE',
-            8 => 'MONEY',
-            9 => 'NULL',
-            10 => 'DATETIME',
-            11 => 'BYTE',
-            12 => 'TEXT',
-            13 => 'VARCHAR',
-            14 => 'INTERVAL',
-            15 => 'NCHAR',
-            16 => 'NVARCHAR',
-            17 => 'INT8',
-            18 => 'SERIAL8',
-            19 => 'SET',
-            20 => 'MULTISET',
-            21 => 'LIST',
-            22 => 'ROW',
-            23 => 'COLLECTION',
-            24 => 'ROWREF',
-            40 => 'VARIABLELENGTH',
-            41 => 'FIXEDLENGTH',
-            42 => 'REFSER8',
-            52 => 'BIGINT',
-            53 => 'BIGINT',
-        );
 
         foreach ($columns as $column) {
             $coltypebase = (int) $column['coltype'];
             $coltypereal = $coltypebase % 256;
-            if (array_key_exists($coltypereal, $columnsTypes)) {
-                $column['type'] = $columnsTypes[$coltypereal];
+            if (array_key_exists($coltypereal, $this->columnsTypes)) {
+                $column['type'] = $this->columnsTypes[$coltypereal];
                 $extended_id = (int) $column['extended_id'];
                 switch ($coltypereal) {
                     case 5:
@@ -475,13 +488,5 @@ EOD;
         }
         $this->tabids[$tabid] = $columns;
         return $columns;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function setTransactionIsolationLevel($level)
-    {
-        $this->db->createCommand("SET TRANSACTION ISOLATION LEVEL $level")->execute();
     }
 }
