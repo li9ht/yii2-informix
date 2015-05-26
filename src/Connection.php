@@ -1,5 +1,5 @@
 <?php
-namespace li9ht\yii2\informix\driver\db;
+namespace li9ht\yii2\informix;
 use yii;
 
 class Connection extends yii\db\Connection {
@@ -10,6 +10,6 @@ class Connection extends yii\db\Connection {
 	];
 
     public $schemaMap = [
-        'informix' => 'li9ht\yii2\informix\driver\db\informix\Schema', // Progress
+        'informix' => 'li9ht\yii2\informix\Schema', // Progress
     ];
 } 

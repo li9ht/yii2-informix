@@ -1,5 +1,5 @@
 <?php
-namespace li9ht\yii2\informix\driver\db\informix;
+namespace li9ht\yii2\informix;
 
 use yii;
 use yii\base\NotSupportedException;

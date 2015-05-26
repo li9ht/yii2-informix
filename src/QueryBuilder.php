@@ -1,11 +1,10 @@
 <?php
-namespace li9ht\yii2\informix\driver\db\informix;
+namespace li9ht\yii2\informix;
 
 use yii\base\NotSupportedException;
 
 class QueryBuilder extends \yii\db\QueryBuilder
 {
-
 
     /**
      * @inheritdoc

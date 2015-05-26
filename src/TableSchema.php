@@ -1,6 +1,5 @@
 <?php 
-namespace li9ht\yii2\informix\driver\db\informix;
-
+namespace li9ht\yii2\informix;
 
 class TableSchema extends \yii\db\TableSchema
 {
