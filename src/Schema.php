@@ -10,7 +10,35 @@ class Schema extends yii\db\Schema
      * @var array mapping from physical column types (keys) to abstract column types (values)
      */
     public $typeMap = [
+        'tinyint' => self::TYPE_SMALLINT,
+        'bit' => self::TYPE_INTEGER,
+        'smallint' => self::TYPE_SMALLINT,
+        'mediumint' => self::TYPE_INTEGER,
+        'int' => self::TYPE_INTEGER,
+        'integer' => self::TYPE_INTEGER,
+        'bigint' => self::TYPE_BIGINT,
+        'float' => self::TYPE_FLOAT,
+        'double' => self::TYPE_DOUBLE,
+        'real' => self::TYPE_FLOAT,
+        'decimal' => self::TYPE_DECIMAL,
+        'numeric' => self::TYPE_DECIMAL,
+        'tinytext' => self::TYPE_TEXT,
+        'mediumtext' => self::TYPE_TEXT,
+        'longtext' => self::TYPE_TEXT,
+        'longblob' => self::TYPE_BINARY,
+        'blob' => self::TYPE_BINARY,
+        'varchar' => self::TYPE_STRING,
+        'string' => self::TYPE_STRING,
+        'char' => self::TYPE_STRING,
+        'datetime' => self::TYPE_DATETIME,
+        'year' => self::TYPE_DATE,
+        'date' => self::TYPE_DATE,
+        'time' => self::TYPE_TIME,
+        'timestamp' => self::TYPE_TIMESTAMP,
+        'enum' => self::TYPE_STRING,
+
         'serial NOT NULL PRIMARY KEY' => self::TYPE_PK ,
+        'serial' => self::TYPE_INTEGER ,
         'varchar(255)' => self::TYPE_STRING  ,
         'text' => self::TYPE_TEXT ,
         'integer'  => self::TYPE_INTEGER  ,
@@ -23,6 +51,7 @@ class Schema extends yii\db\Schema
         'byte'  => self::TYPE_BINARY ,
         'boolean'  => self::TYPE_BOOLEAN  ,
         'money'  => self::TYPE_MONEY   ,
+        'clob' => self::TYPE_BINARY,
     ];
  
     private $tabids = array();
@@ -93,7 +122,8 @@ class Schema extends yii\db\Schema
     }
 
     protected function createColumn($column) {
-        $c = new ColumnSchema();
+
+        $c = $this->createColumnSchema();
         $c->name = $column['colname'];
         $c->allowNull = (boolean) $column['allownull'];
         $c->isPrimaryKey = false;
@@ -107,7 +137,60 @@ class Schema extends yii\db\Schema
         }
 
         $c->init($column['type'], $column['defvalue']);
+    
+        $c->dbType =  $column['type'] ;
+        $c->type = self::TYPE_STRING;
+        if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $c->dbType, $matches)) {
+
+            $type = strtolower($matches[1]);
+            if (isset($this->typeMap[$type])) {
+                $c->type = $this->typeMap[$type];
+            }
+            if (!empty($matches[2])) {
+                $values = explode(',', $matches[2]);
+                $c->size = $c->precision = (int) $values[0];
+                if (isset($values[1])) {
+                    $c->scale = (int) $values[1];
+                }
+            }else{
+                if($c->type=='float'){
+                    $c->size = $c->precision = (int) 32; 
+                }
+            }
+        }
+
+        $c->phpType = $this->getColumnPhpType($column['type']);
+
+        if (preg_match('/(integer|date|datetime|text|blob|binary)/', $c->type)) {
+            $c->size = null;
+        }
+
         return $c;
+    }
+
+    /**
+     * Extracts the PHP type from abstract DB type.
+     * @param ColumnSchema $column the column schema information
+     * @return string PHP type name
+     */
+    protected function getColumnPhpType($dbType)
+    {
+        $dbType = strtolower(trim($dbType));
+        if (strpos($dbType, 'char') !== false || strpos($dbType, 'text') !== false) {
+            $type = 'string';
+        } elseif (strpos($dbType, 'bool') !== false) {
+            $type = 'boolean';
+        } elseif (preg_match('/(boolean)/', $dbType)) {
+            $type = 'boolean';
+        } elseif (preg_match('/(real|float|double|decimal|money)/', $dbType)) {
+            $type = 'double';
+        } elseif (preg_match('/(integer|serial|smallint|int8|bigint)/', $dbType)) {
+            $type = 'integer';
+        } else {
+            $type = 'string';
+        }
+
+        return $type;
     }
 
     private  $columnsTypes = array(
