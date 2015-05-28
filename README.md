@@ -15,3 +15,11 @@ Pdo informix driver for Yii2 framework
        ],
   ),
 ```
+
+## Unit Test
+* Copy test folder to your yiiApp root folder.
+* Edit connection dsn in test/TestCase.php file
+* Run  
+```bash
+phpunit --bootstrap bootstrap.php ActiveRecordTest.php
+```
