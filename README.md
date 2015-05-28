@@ -7,15 +7,11 @@ Pdo informix driver for Yii2 framework
 
 ```php
 <?php
-...
   'components' => array(
-  ...
     'db' => [
            'class' => 'li9ht\yii2\informix\Connection',
            'driverName' => 'informix',
            'dsn' => 'informix:DSN=inf_db_odbc',
        ],
-    ...
   ),
-...
 ```
