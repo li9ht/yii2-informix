@@ -572,4 +572,27 @@ EOD;
         $this->tabids[$tabid] = $columns;
         return $columns;
     }
+
+    public function insert($table, $columns)
+    {
+        foreach ($columns as $key => $value) {
+            if(empty($value)) unset($columns[$key]);
+        }
+        
+        $command = $this->db->createCommand()->insert($table, $columns);
+        if (!$command->execute()) {
+            return false;
+        }
+        $tableSchema = $this->getTableSchema($table);
+        $result = [];
+        foreach ($tableSchema->primaryKey as $name) {
+            if ($tableSchema->columns[$name]->autoIncrement) {
+                $result[$name] = $this->getLastInsertID($tableSchema->sequenceName);
+                break;
+            } else {
+                $result[$name] = isset($columns[$name]) ? $columns[$name] : $tableSchema->columns[$name]->defaultValue;
+            }
+        }
+        return $result;
+    }
 }
