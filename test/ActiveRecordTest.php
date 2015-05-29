@@ -26,7 +26,7 @@ class ActiveRecordTest extends TestCase
         $connection->createCommand()
         ->batchInsert(
         	Customer::tableName(),
-        	['id','name','email','address','status']	, 
+        	['id','name','email','address','status'], 
         	$rows
         	)->execute();
         $this->testRows = $rows;
