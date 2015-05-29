@@ -573,26 +573,21 @@ EOD;
         return $columns;
     }
 
-    public function insert($table, $columns)
+    /**
+     * @inheritdoc
+     */
+    public function getPdoType($data)
     {
-        foreach ($columns as $key => $value) {
-            if(empty($value)) unset($columns[$key]);
-        }
-        
-        $command = $this->db->createCommand()->insert($table, $columns);
-        if (!$command->execute()) {
-            return false;
-        }
-        $tableSchema = $this->getTableSchema($table);
-        $result = [];
-        foreach ($tableSchema->primaryKey as $name) {
-            if ($tableSchema->columns[$name]->autoIncrement) {
-                $result[$name] = $this->getLastInsertID($tableSchema->sequenceName);
-                break;
-            } else {
-                $result[$name] = isset($columns[$name]) ? $columns[$name] : $tableSchema->columns[$name]->defaultValue;
-            }
-        }
-        return $result;
+        static $typeMap = [
+            // php type => PDO type
+            'boolean' => \PDO::PARAM_BOOL,
+            'integer' => \PDO::PARAM_INT,
+            'string' => \PDO::PARAM_STR,
+            'resource' => \PDO::PARAM_LOB,
+            'NULL' => \PDO::PARAM_STR, // [Informix][Informix ODBC Driver]Wrong number of parameters if set NULL
+        ];
+        $type = gettype($data);
+
+        return isset($typeMap[$type]) ? $typeMap[$type] : \PDO::PARAM_STR;
     }
 }

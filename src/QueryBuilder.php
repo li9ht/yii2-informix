@@ -38,25 +38,7 @@ class QueryBuilder extends \yii\db\QueryBuilder
     }
 
     /**
-     * Generates a batch INSERT SQL statement.
-     * For example,
-     *
-     * ~~~
-     * $sql = $queryBuilder->batchInsert('user', ['name', 'age'], [
-     *     ['Tom', 30],
-     *     ['Jane', 20],
-     *     ['Linda', 25],
-     * ]);
-     * ~~~
-     *
-     * Note that the values in each row must match the corresponding column names.
-     *
-     * The method will properly escape the column names, and quote the values to be inserted.
-     *
-     * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column names
-     * @param array $rows the rows to be batch inserted into the table
-     * @return string the batch INSERT SQL statement
+     * @inheritdoc
      */
     public function batchInsert($table, $columns, $rows)
     {
