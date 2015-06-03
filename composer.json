@@ -5,12 +5,12 @@
         "yii2",
         "informix"
     ],
-    "homepage": "https://bitbucket.org/li9ht/yii2-informixodbc",
+    "homepage": "https://github.com/li9ht/yii2-informix",
     "type": "yii2-extension",
     "license": "MIT",
     "support": {
-        "issues": "https://bitbucket.org/li9ht/yii2-informixodbc",
-        "source": "https://bitbucket.org/li9ht/yii2-informixodbc"
+        "issues": "https://github.com/li9ht/yii2-informix/issues",
+        "source": "https://github.com/li9ht/yii2-informix"
     },
     "require": {
         "php": ">=5.4.0",
